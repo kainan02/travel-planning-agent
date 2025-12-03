@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Travel Agent</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI-Powered Travel Agent</h1>
+            <h2 class="subtitle-main">An Intelligent Itinerary Planning System</h2>
+            <p class="subtitle">Enter your travel information and AI will generate a detailed travel plan for you</p>
+            <div style="margin-top: 20px;">
+                <a href="/manual-kb" style="color: #E8F4F8; text-decoration: none; padding: 10px 20px; background: rgba(255,255,255,0.2); border-radius: 5px; font-weight: 600; transition: all 0.3s ease;">📝 手动添加攻略</a>
+            </div>
+        </header>
+
+        <main>
+            <!-- Search Section -->
+            <div class="search-container">
+                <h2>Search Travel Information</h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search for attractions, restaurants, hotels..." />
+                    <button type="button" id="searchBtn" class="btn-search">Search</button>
+                </div>
+                <div id="searchResults" class="search-results" style="display: none;"></div>
+            </div>
+
+            <div class="form-container">
+                <form id="travelForm">
+                    <div class="form-group">
+                        <label for="days">Travel Days *</label>
+                        <input type="number" id="days" name="days" min="1" max="30" required placeholder="e.g., 3" title="Please enter the number of travel days">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="destination">Destination *</label>
+                        <input type="text" id="destination" name="destination" required placeholder="e.g., Tokyo, Paris, New York" title="Please enter your travel destination">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="budget">Budget (Optional)</label>
+                        <div class="budget-input-group">
+                            <input type="number" id="budget" name="budget" min="0" step="0.01" placeholder="Enter amount">
+                            <select id="currency" name="currency" class="currency-select">
+                                <option value="">Select Currency</option>
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="CNY">CNY - Chinese Yuan</option>
+                                <option value="HKD">HKD - Hong Kong Dollar</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="GBP">GBP - British Pound</option>
+                                <option value="JPY">JPY - Japanese Yen</option>
+                                <option value="KRW">KRW - South Korean Won</option>
+                                <option value="SGD">SGD - Singapore Dollar</option>
+                                <option value="THB">THB - Thai Baht</option>
+                                <option value="AUD">AUD - Australian Dollar</option>
+                                <option value="CAD">CAD - Canadian Dollar</option>
+                                <option value="NZD">NZD - New Zealand Dollar</option>
+                                <option value="CHF">CHF - Swiss Franc</option>
+                            </select>
+                        </div>
+                        <small class="budget-hint">If you enter an amount, currency selection is required</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="preferences">Preferences (Optional)</label>
+                        <textarea id="preferences" name="preferences" rows="3" placeholder="e.g., history, culture, food, nature, shopping"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="llmMode">LLM Mode</label>
+                        <select id="llmMode" name="llmMode" class="currency-select">
+                            <option value="cloud">Cloud (High Performance)</option>
+                            <option value="local">Local (Data Privacy)</option>
+                        </select>
+                        <small class="budget-hint">Cloud mode uses DeepSeek API. Local mode requires Ollama running on your machine.</small>
+                    </div>
+
+                    <button type="submit" id="generateBtn" class="btn-primary">
+                        <span class="btn-text">Generate Travel Plan</span>
+                        <span class="btn-loader" style="display: none;">Generating your travel plan, please wait...</span>
+                    </button>
+                </form>
+            </div>
+
+            <div id="resultContainer" class="result-container" style="display: none;">
+                <div class="result-header">
+                    <h2>Your Travel Plan</h2>
+                    <div class="result-actions">
+                        <button id="copyBtn" class="btn-secondary">Copy Plan</button>
+                        <button id="exportIcsBtn" class="btn-secondary">Export to Calendar (.ics)</button>
+                    </div>
+                </div>
+                <div id="exportOptions" class="export-options" style="display: none;">
+                    <label for="startDate">Start Date (for calendar export):</label>
+                    <input type="date" id="startDate" name="startDate" lang="en">
+                </div>
+                <div id="planContent" class="plan-content"></div>
+            </div>
+
+            <div id="errorContainer" class="error-container" style="display: none;">
+                <div class="error-message"></div>
+            </div>
+            
+            <!-- Debug Information Display Area -->
+            <div id="debugContainer" class="debug-container" style="display: none;">
+                <h3>Debug Information</h3>
+                <div id="debugContent" class="debug-content"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by DeepSeek API, Google Custom Search, and Ollama</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
+

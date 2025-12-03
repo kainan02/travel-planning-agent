@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手动添加攻略 - AI旅行规划助手</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .nav-links {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #E8F4F8;
+            border-radius: 10px;
+        }
+        .nav-links a {
+            color: #1459CF;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        .nav-links a:hover {
+            background: #1459CF;
+            color: white;
+        }
+        .guide-input-container {
+            background: #F8F2EC;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #3F605B;
+        }
+        .guide-input-container h2 {
+            color: #3F605B;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .guide-textarea {
+            width: 100%;
+            min-height: 400px;
+            padding: 15px;
+            border: 2px solid #3F605B;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            background: white;
+            color: #3F605B;
+            line-height: 1.6;
+            resize: vertical;
+        }
+        .guide-textarea:focus {
+            outline: none;
+            border-color: #1D4C50;
+            box-shadow: 0 0 0 3px rgba(20, 89, 207, 0.1);
+        }
+        .hint-text {
+            color: #3F605B;
+            font-size: 0.9em;
+            margin-top: 10px;
+            opacity: 0.7;
+            line-height: 1.6;
+        }
+        .success-message {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        .error-message {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        .saved-guides {
+            background: #F8F2EC;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            border: 2px solid #3F605B;
+        }
+        .saved-guides h2 {
+            color: #3F605B;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .guide-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #1D4C50;
+        }
+        .guide-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .guide-item-title {
+            color: #1D4C50;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        .guide-item-date {
+            color: #3F605B;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+        .guide-item-content {
+            color: #3F605B;
+            line-height: 1.6;
+            max-height: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 10px;
+        }
+        .guide-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-small {
+            padding: 5px 15px;
+            font-size: 0.85em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-delete {
+            background: #A9423C;
+            color: white;
+        }
+        .btn-delete:hover {
+            background: #c55a52;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>手动添加攻略</h1>
+            <h2 class="subtitle-main">将您搜集的攻略添加到知识库</h2>
+            <p class="subtitle">粘贴您从各种渠道搜集的旅游攻略，系统将自动保存并用于生成更准确的旅行计划</p>
+        </header>
+
+        <main>
+            <!-- 导航链接 -->
+            <div class="nav-links">
+                <a href="/">返回主页</a>
+                <a href="/manual-kb">刷新页面</a>
+            </div>
+
+            <!-- 攻略输入表单 -->
+            <div class="guide-input-container">
+                <h2>输入攻略内容</h2>
+                <form id="guideForm">
+                    <div class="form-group">
+                        <label for="destination">目的地 *</label>
+                        <input type="text" id="destination" name="destination" required 
+                               placeholder="例如：东京、巴黎、纽约" 
+                               style="width: 100%; padding: 12px 15px; border: 2px solid #3F605B; border-radius: 8px; font-size: 1em;">
+                    </div>
+                    <div class="form-group">
+                        <label for="guideContent">攻略内容 *</label>
+                        <textarea id="guideContent" name="guideContent" class="guide-textarea" 
+                                  placeholder="请在此处粘贴您搜集的攻略内容，可以包括：&#10;- 景点推荐&#10;- 美食推荐&#10;- 住宿建议&#10;- 交通信息&#10;- 注意事项&#10;- 其他有用信息" 
+                                  required></textarea>
+                        <p class="hint-text">
+                            💡 提示：您可以粘贴从网站、博客、论坛等渠道搜集的攻略内容。系统会自动处理并保存到知识库中，在生成旅行计划时会优先使用这些信息。
+                        </p>
+                    </div>
+                    <button type="submit" id="saveBtn" class="btn-primary">
+                        <span class="btn-text">保存攻略</span>
+                        <span class="btn-loader" style="display: none;">正在保存...</span>
+                    </button>
+                </form>
+                <div id="successMessage" class="success-message"></div>
+                <div id="errorMessage" class="error-message"></div>
+            </div>
+
+            <!-- 已保存的攻略列表 -->
+            <div class="saved-guides" id="savedGuidesContainer" style="display: none;">
+                <h2>已保存的攻略</h2>
+                <div id="savedGuidesList"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by DeepSeek API, Google Custom Search, and Ollama</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('guideForm');
+            const saveBtn = document.getElementById('saveBtn');
+            const btnText = document.querySelector('.btn-text');
+            const btnLoader = document.querySelector('.btn-loader');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            const savedGuidesContainer = document.getElementById('savedGuidesContainer');
+            const savedGuidesList = document.getElementById('savedGuidesList');
+
+            // 加载已保存的攻略列表
+            loadSavedGuides();
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // 隐藏之前的消息
+                successMessage.style.display = 'none';
+                errorMessage.style.display = 'none';
+
+                const destination = document.getElementById('destination').value.trim();
+                const guideContent = document.getElementById('guideContent').value.trim();
+
+                if (!destination || !guideContent) {
+                    showError('请填写目的地和攻略内容');
+                    return;
+                }
+
+                // 显示加载状态
+                saveBtn.disabled = true;
+                btnText.style.display = 'none';
+                btnLoader.style.display = 'inline';
+
+                try {
+                    const response = await fetch('/api/save-manual-kb', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            destination: destination,
+                            content: guideContent
+                        }),
+                        credentials: 'same-origin'
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showSuccess(`攻略已成功保存到知识库！目的地：${destination}`);
+                        // 清空表单
+                        document.getElementById('guideContent').value = '';
+                        // 重新加载已保存的攻略列表
+                        loadSavedGuides();
+                    } else {
+                        showError(data.error || '保存失败，请重试');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showError('保存失败：' + error.message);
+                } finally {
+                    // 恢复按钮状态
+                    saveBtn.disabled = false;
+                    btnText.style.display = 'inline';
+                    btnLoader.style.display = 'none';
+                }
+            });
+
+            function showSuccess(message) {
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+                errorMessage.style.display = 'none';
+                successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+                errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            async function loadSavedGuides() {
+                try {
+                    const response = await fetch('/api/list-manual-kb', {
+                        method: 'GET',
+                        credentials: 'same-origin'
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success && data.guides && data.guides.length > 0) {
+                        savedGuidesContainer.style.display = 'block';
+                        savedGuidesList.innerHTML = '';
+
+                        data.guides.forEach((guide, index) => {
+                            const guideItem = document.createElement('div');
+                            guideItem.className = 'guide-item';
+                            
+                            const preview = guide.content.length > 300 
+                                ? guide.content.substring(0, 300) + '...' 
+                                : guide.content;
+
+                            guideItem.innerHTML = `
+                                <div class="guide-item-header">
+                                    <div class="guide-item-title">${guide.destination}</div>
+                                    <div class="guide-item-date">${guide.created_at || '未知日期'}</div>
+                                </div>
+                                <div class="guide-item-content">${preview.replace(/\n/g, '<br>')}</div>
+                                <div class="guide-item-actions">
+                                    <button class="btn-small btn-delete" onclick="deleteGuide('${guide.kb_id}')">删除</button>
+                                </div>
+                            `;
+                            savedGuidesList.appendChild(guideItem);
+                        });
+                    } else {
+                        savedGuidesContainer.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error loading saved guides:', error);
+                    // 不显示错误，因为可能只是没有保存的攻略
+                }
+            }
+
+            // 全局函数，用于删除攻略
+            window.deleteGuide = async function(kbId) {
+                if (!confirm('确定要删除这条攻略吗？')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/delete-manual-kb', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ kb_id: kbId }),
+                        credentials: 'same-origin'
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showSuccess('攻略已删除');
+                        loadSavedGuides();
+                    } else {
+                        showError(data.error || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('Error deleting guide:', error);
+                    showError('删除失败：' + error.message);
+                }
+            };
+        });
+    </script>
+</body>
+</html>
+
